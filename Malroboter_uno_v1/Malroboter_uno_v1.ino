@@ -30,7 +30,7 @@ Servo servo1;   // erstellt servo1 als Servoobjekt
 
 //Globale Variablen
 int duese = 1;   // nummer der gewünschten Düse
-int servoheben = 20;  // winkel des eingefahrenen servos
+int servoheben = 80;  // winkel des eingefahrenen servos
 int servosenken = 120;  // winkel des ausgefahrenen servos
 int Spos = 120;  // position des Servos
 int Ewert[] = {0, 100, 200, 300, 400, 500, 600}; // encoder werte zu den düsenpositionen. das erst ist 0 damit düsenposition mit array nummer übereinstimmte da arrays mit 0 starten.
