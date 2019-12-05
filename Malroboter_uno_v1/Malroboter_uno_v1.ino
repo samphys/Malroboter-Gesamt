@@ -50,6 +50,7 @@ boolean reinigungON = 0;  // löst den reinigungszyklus aus. 0 = off, 1 = on
 int reinigungszyklen = 3;  // setzt anzahl der reinigungszyklen fest, welche bei aufruf der reinigungsfunktion durchgeführt werden
 int spueldauer = 3000;  // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
 boolean wechslerOben;  // zeigt ob wechsler angehoben ist. 0 = unten, 1 = oben
+int tFarbrueckzug = 1000;  // dauer des farbrückzuges bei düsenwechseln in ms
 
 
 void setup() 
@@ -133,7 +134,8 @@ void counter()  // Interrupt funktion um die schritte des Wechslermotors zu zäh
 void dueseWechseln()  // wechselt die düse
 {
  Serial.println("dueseWechseln gestartet");
-  
+
+ farbrueckzug();  
  PAus();
  wechslerHeben();
 
@@ -152,8 +154,8 @@ void dueseWechseln()  // wechselt die düse
  WMot->run(RELEASE);                // stopt den wechsler
    
  wechslerSenken();
- 
  duesenstand = duese;
+ farbvorschub();
 
  Serial.println("dueseWechseln abgeschlossen");
 }
@@ -194,6 +196,82 @@ void malen()  // führ die Farbauftragung aus
      break;
    }
   Serial.println("malen abgeschlossen");
+}
+
+
+void farbrueckzug()  // zieht farbe aus der düse zurück um auslaufen beim nichtgebrauch zu verhindern
+{
+  Serial.println("farbrueckzug gestartet");
+  
+  switch (duese)
+   {
+    case 1:
+     P1->setSpeed(250);
+     P1->run(BACKWARD);
+     break;
+    case 2:
+     P2->setSpeed(250);
+     P2->run(BACKWARD);
+     break;
+    case 3:
+     P3->setSpeed(250);
+     P3->run(BACKWARD);
+     break;
+    case 4:
+     P4->setSpeed(250);
+     P4->run(BACKWARD);
+     break;
+    case 5:
+     P5->setSpeed(250);
+     P5->run(BACKWARD);
+     break;
+    case 6:
+     P6->setSpeed(250);
+     P6->run(BACKWARD);
+     break;
+   }
+  delay(tFarbrueckzug);
+  PAus();
+   
+  Serial.println("farbrueckzug abgeschlossen");
+}
+
+
+void farbvorschub()  // drückt die farbe nachdem wechslen wieder an die düsenspitze, damit direkt wieder voll gemalt werden kann
+{
+  Serial.println("farbvorschub gestartet");
+  
+  switch (duese)
+   {
+    case 1:
+     P1->setSpeed(125);
+     P1->run(FORWARD);
+     break;
+    case 2:
+     P2->setSpeed(125);
+     P2->run(FORWARD);
+     break;
+    case 3:
+     P3->setSpeed(125);
+     P3->run(FORWARD);
+     break;
+    case 4:
+     P4->setSpeed(125);
+     P4->run(FORWARD);
+     break;
+    case 5:
+     P5->setSpeed(125);
+     P5->run(FORWARD);
+     break;
+    case 6:
+     P6->setSpeed(125);
+     P6->run(FORWARD);
+     break;
+   }
+  delay(2*tFarbrueckzug);
+  PAus();
+   
+  Serial.println("farbrueckzug abgeschlossen");
 }
 
 
