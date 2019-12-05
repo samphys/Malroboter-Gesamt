@@ -38,7 +38,7 @@ int duese = 1;   // nummer der gewünschten Düse
 int servoheben = 80;  // winkel des eingefahrenen servos
 int servosenken = 120;  // winkel des ausgefahrenen servos
 int Spos = 120;  // position des Servos
-int Ewert[] = {0, 100, 200, 300, 400, 500, 600}; // encoder werte zu den düsenpositionen. das erst ist 0 damit düsenposition mit array nummer übereinstimmte da arrays mit 0 starten.
+int Ewert[] = {80, 100, 200, 300, 400, 500, 600}; // encoder werte zu den düsenpositionen. das erst ist 0 damit düsenposition mit array nummer übereinstimmte da arrays mit 0 starten.
 volatile int encoder;     // zählvariabel der encoderschritte
 volatile boolean drehrichtung;    // drehrichtung des Wechslers. 0 = forwärts, 1 = rückwärts
 boolean endtaster = 0;   // endtaster um die Position des Düsenwechslers zu definieren
@@ -132,7 +132,7 @@ void nullpunkt()  // fährt den nullpunkt des wechslers an und setzt die positio
   {
    WMot->run(BACKWARD);
    endtaster = digitalRead(3);
-   encoder = -20;  // setzt den encoder auf den Wert der endschalterposition. WERT NOCH PLATZHALTER. MUSS NOCH BESTIMMT WERDEN
+   encoder = 60;  // setzt den encoder auf den Wert der endschalterposition. WERT NOCH PLATZHALTER. MUSS NOCH BESTIMMT WERDEN
   }
 
  while (Ewert[1] > encoder)  // setzt den Wechsler auf düsenposition 1
@@ -158,6 +158,7 @@ void counter()  // Interrupt funktion um die schritte des Wechslermotors zu zäh
   if (drehrichtung == 1) encoder--;
 
   Serial.println(encoder);
+  Serial.println(duese);
 }
 
 
@@ -403,14 +404,14 @@ void WiFi_Empfangen(){
   
   if (radio.available()){
     radio.read(&empfangen, sizeof(empfangen));
-  Serial.println(empfangen[0]);
-  Serial.println(empfangen[1]);
-  Serial.println(empfangen[2]);
-  Serial.println(empfangen[3]);
-  Serial.println(empfangen[4]);
-  Serial.println(empfangen[5]);
-  Serial.println(empfangen[6]);
-  Serial.println();
+//  Serial.println(empfangen[0]);
+//  Serial.println(empfangen[1]);
+//  Serial.println(empfangen[2]);
+//  Serial.println(empfangen[3]);
+//  Serial.println(empfangen[4]);
+//  Serial.println(empfangen[5]);
+//  Serial.println(empfangen[6]);
+//  Serial.println();
   
   }
   duese = empfangen[0];
