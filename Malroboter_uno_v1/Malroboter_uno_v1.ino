@@ -11,6 +11,9 @@
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include <Servo.h>
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
 
 //Inizialisierung der i2c verbindung mit den Shields
 Adafruit_MotorShield AFMS0(0x60); // No jumper closed
@@ -25,6 +28,8 @@ Adafruit_DCMotor *P4 = AFMS0.getMotor(4);  // Pumpe 4
 Adafruit_DCMotor *P5 = AFMS1.getMotor(1);  // Pumpe 5
 Adafruit_DCMotor *P6 = AFMS1.getMotor(2);  // Pumpe 6
 Adafruit_DCMotor *WMot = AFMS1.getMotor(3);  // Motor des wechslers
+Adafruit_DCMotor *MotorL = AFMS2.getMotor(1);  // Linker Antrieb
+Adafruit_DCMotor *MotorR = AFMS2.getMotor(2);  // Rechter Antrieb
 
 Servo servo1;   // erstellt servo1 als Servoobjekt
 
@@ -52,10 +57,24 @@ int spueldauer = 3000;  // dauer der spühlung einer einzelnen düse im reinigun
 boolean wechslerOben;  // zeigt ob wechsler angehoben ist. 0 = unten, 1 = oben
 int tFarbrueckzug = 1000;  // dauer des farbrückzuges bei düsenwechseln in ms
 
+//Pins für nRF24L01 Kommunikation
+
+int pin_CSN = 7;
+int pin_CE = 8;
+int pin_MOSI = 11;
+int pin_MISO = 12;
+int pin_SCK = 13;
+
+
+RF24 radio(pin_CE,pin_CSN);    //Pin definition CE,CSN
+
+const byte addresse[6] = "00001";      //Adresse für die Kommunikation, Nummer frei wählbar "00000"-"99999", Wichtig!-> Sender und Empfänger selbe Nummer
+
+int empfangen[7] = {0,0,0,0,0,0,0};
 
 void setup() 
 {
-  Serial.begin(115200);  // serial gedöns nur zu testzwecken
+  Serial.begin(9600);  // serial gedöns nur zu testzwecken
   Serial.println("setup gestartet");
   
   AFMS0.begin(); // Startet das untere Shield
@@ -74,6 +93,10 @@ void setup()
   P5->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
   P6->run(RELEASE); // modus der Pumpe definieren
   P6->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
+  MotorR->run(RELEASE); // modus des Antriebs definieren
+  MotorR->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
+  MotorL->run(RELEASE); // modus des Antriebs definieren
+  MotorL->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
   
   WMot->run(RELEASE); // modus des motors definieren
   WMot->setSpeed(40);  // geschwindigkeit setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
@@ -86,6 +109,13 @@ void setup()
   pinMode(3, INPUT);  // anschluss des Endtasters
 
   nullpunkt();  // aufruf der nullpunktfunktion des wechslers
+
+//Setup WiFi Kommunikation
+  radio.begin();
+  radio.openReadingPipe(1,addresse[0]);   //Empfangen auf "00001"
+  radio.setPALevel(RF24_PA_MIN);     // Power Amplifier level {RF24_PA_MIN ,RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX}
+  radio.startListening();
+
 
   Serial.println("setup abgeschlossen");
 }
@@ -369,10 +399,53 @@ void PAus()  // schaltet alle pumpen aus
  P6->run(RELEASE); 
 }
 
+void WiFi_Empfangen(){
+  
+  if (radio.available()){
+    radio.read(&empfangen, sizeof(empfangen));
+  Serial.println(empfangen[0]);
+  Serial.println(empfangen[1]);
+  Serial.println(empfangen[2]);
+  Serial.println(empfangen[3]);
+  Serial.println(empfangen[4]);
+  Serial.println(empfangen[5]);
+  Serial.println(empfangen[6]);
+  Serial.println();
+  
+  }
+  duese = empfangen[0];
+  farbON = empfangen[1];
+  reinigungON = empfangen[2];
+  MotR = empfangen[3];
+  MotL = empfangen[4];
+  drMotR = empfangen[5];
+  drMotL = empfangen[6];
+  
+}
+
+
+void Fahren(){
+  MotorR->setSpeed(MotR);
+  if(empfangen[5]==0){
+    MotorR->run(BACKWARD);
+  }
+  else if(empfangen[5]==1){
+    MotorR->run(FORWARD);
+  }
+  MotorL->setSpeed(MotL);
+  if(empfangen[6]==0){
+    MotorL->run(BACKWARD);
+  }
+  else if(empfangen[6]==1){
+    MotorL->run(FORWARD);
+  }
+}
 
 void loop() 
 {
-  // hier die daten der steuereinheit einlesen
+ WiFi_Empfangen();
+ 
+ Fahren();
   
  if (duesenstand != duese) dueseWechseln();  // kontroliert düsenposition
  
