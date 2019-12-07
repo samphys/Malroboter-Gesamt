@@ -35,7 +35,7 @@ Servo servo1;   // erstellt servo1 als Servoobjekt
 
 //Globale Variablen
 int duese = 1;   // nummer der gewünschten Düse
-int servoheben = 80;  // winkel des eingefahrenen servos
+int servoheben = 60;  // winkel des eingefahrenen servos
 int servosenken = 120;  // winkel des ausgefahrenen servos
 int Spos = 120;  // position des Servos
 int Ewert[] = {80, 100, 200, 300, 400, 500, 600}; // encoder werte zu den düsenpositionen. das erst ist 0 damit düsenposition mit array nummer übereinstimmte da arrays mit 0 starten.
@@ -48,14 +48,14 @@ int farbMenge = 0;  // (0...255) bestimmt die geschwindigkeit der pumpen und som
 int fmf = 1;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. PLATZHALTER. WERT MUSS NOCH EMPIRISCH ERMITTELT WERDEN 
 int MotL;  // geschwindigkeit des Linken Antriebsmotors (0...255)
 int MotR;  // geschwindigkeit des Rechten Antriebsmotors (0...255)
-int drMotL;  // drehrichtung des Linken Antriebsmotors. 0 = released, 1 = forwärts, 2 = rückwärts
-int drMotR;  // drehrichtung des Rechten Antriebsmotors. 0 = released, 1 = forwärts, 2 = rückwärts
+int drMotL;  // drehrichtung des Linken Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
+int drMotR;  // drehrichtung des Rechten Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
 int vd;  // geschwindigkeit an der düse
 boolean reinigungON = 0;  // löst den reinigungszyklus aus. 0 = off, 1 = on
 int reinigungszyklen = 3;  // setzt anzahl der reinigungszyklen fest, welche bei aufruf der reinigungsfunktion durchgeführt werden
 int spueldauer = 3000;  // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
 boolean wechslerOben;  // zeigt ob wechsler angehoben ist. 0 = unten, 1 = oben
-int tFarbrueckzug = 1000;  // dauer des farbrückzuges bei düsenwechseln in ms
+int tFarbrueckzug = 2000;  // dauer des farbrückzuges bei düsenwechseln in ms
 
 //Pins für nRF24L01 Kommunikation
 
@@ -107,6 +107,9 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(2), counter, RISING);  // definiert pin 2 als hardware interrupt. getrigerrt mit einer steigenden flanke(RISING) wird die funktion counter aufgerufen.
 
   pinMode(3, INPUT);  // anschluss des Endtasters
+  pinMode(6, OUTPUT);  // Status LED
+
+  digitalWrite(6, HIGH);  // setzt Status LED auf High
 
   nullpunkt();  // aufruf der nullpunktfunktion des wechslers
 
@@ -124,24 +127,17 @@ void setup()
 void nullpunkt()  // fährt den nullpunkt des wechslers an und setzt die position
 {
  Serial.println("nullpunkt gestartet");
-  
+ MotAus(); 
  PAus();
  wechslerHeben();
     
  while (endtaster != 1)  // fährt den Wechsler an den Endschalter um die Position zu bestimmen
   {
+   drehrichtung = 1;
    WMot->run(BACKWARD);
    endtaster = digitalRead(3);
    encoder = 60;  // setzt den encoder auf den Wert der endschalterposition. WERT NOCH PLATZHALTER. MUSS NOCH BESTIMMT WERDEN
   }
-
- while (Ewert[1] > encoder)  // setzt den Wechsler auf düsenposition 1
-  {
-   drehrichtung = 0;
-   WMot->run(FORWARD);
-  }
-
- duesenstand = 1;
   
  WMot->run(RELEASE);
 
@@ -165,7 +161,7 @@ void counter()  // Interrupt funktion um die schritte des Wechslermotors zu zäh
 void dueseWechseln()  // wechselt die düse
 {
  Serial.println("dueseWechseln gestartet");
-
+ MotAus();
  farbrueckzug();  
  PAus();
  wechslerHeben();
@@ -194,7 +190,7 @@ void dueseWechseln()  // wechselt die düse
 
 void malen()  // führ die Farbauftragung aus
 {
-  Serial.println("malen gestartet");
+  Serial.println("malen");
   
   wechslerSenken();
   farbMenge =  v()*fmf;
@@ -226,15 +222,15 @@ void malen()  // führ die Farbauftragung aus
      P6->run(FORWARD);
      break;
    }
-  Serial.println("malen abgeschlossen");
+ // Serial.println("malen abgeschlossen");
 }
 
 
 void farbrueckzug()  // zieht farbe aus der düse zurück um auslaufen beim nichtgebrauch zu verhindern
 {
-  Serial.println("farbrueckzug gestartet");
+  Serial.println("farbrueckzug");
   
-  switch (duese)
+  switch (duesenstand)
    {
     case 1:
      P1->setSpeed(250);
@@ -264,13 +260,13 @@ void farbrueckzug()  // zieht farbe aus der düse zurück um auslaufen beim nich
   delay(tFarbrueckzug);
   PAus();
    
-  Serial.println("farbrueckzug abgeschlossen");
+  //Serial.println("farbrueckzug abgeschlossen");
 }
 
 
 void farbvorschub()  // drückt die farbe nachdem wechslen wieder an die düsenspitze, damit direkt wieder voll gemalt werden kann
 {
-  Serial.println("farbvorschub gestartet");
+  Serial.println("farbvorschub");
   
   switch (duese)
    {
@@ -302,7 +298,7 @@ void farbvorschub()  // drückt die farbe nachdem wechslen wieder an die düsens
   delay(2*tFarbrueckzug);
   PAus();
    
-  Serial.println("farbrueckzug abgeschlossen");
+  //Serial.println("farbvorschub abgeschlossen");
 }
 
 
@@ -334,18 +330,19 @@ void wechslerSenken()  // senkt den Wechsler in malposition
 
 int v()  // geschwindigkeit an der düse
 {
- if (drMotL >= 0 && drMotR >= 0) vd = (MotL + MotR)/2;
- if (drMotL >= 0 && drMotR < 0) vd = (MotL - MotR)/2;
- if (drMotL < 0 && drMotR >= 0) vd = (MotR - MotL)/2;
- if (drMotL < 0 && drMotR < 0) vd = (-MotR - MotL)/2;
+ if (drMotL == 1 && drMotR == 1) vd = (MotL + MotR)/2;
+ if (drMotL == 1 && drMotR == 0) vd = (MotL - MotR)/2;
+ if (drMotL == 0 && drMotR == 1) vd = (MotR - MotL)/2;
+ if (drMotL == 0 && drMotR == 0) vd = (-MotR - MotL)/2;
  return(vd);
 }
 
 
 void reinigung()  // reinigt alle düsen "reinigungszyklen"-mal jeweils für "spueldauer" ms 
 {
-  Serial.println("reinigung gestartet");
-  
+ Serial.println("reinigung gestartet");
+ 
+ MotAus(); 
  duese = 1;
  dueseWechseln();
   
@@ -397,7 +394,7 @@ void PAus()  // schaltet alle pumpen aus
  P3->run(RELEASE);
  P4->run(RELEASE);
  P5->run(RELEASE);
- P6->run(RELEASE); 
+ P6->run(RELEASE);
 }
 
 void WiFi_Empfangen(){
@@ -411,7 +408,7 @@ void WiFi_Empfangen(){
 //  Serial.println(empfangen[4]);
 //  Serial.println(empfangen[5]);
 //  Serial.println(empfangen[6]);
-//  Serial.println();
+  Serial.println();
   
   }
   duese = empfangen[0];
@@ -425,15 +422,21 @@ void WiFi_Empfangen(){
 }
 
 
-void Fahren(){
-  MotorR->setSpeed(MotR);
+void Fahren()
+{
+  if (farbON == 1) MotorR->setSpeed(MotR/2);  // verringert geschwindigkeit zum malen
+  else MotorR->setSpeed(MotR);
+  
   if(empfangen[5]==0){
     MotorR->run(BACKWARD);
   }
   else if(empfangen[5]==1){
     MotorR->run(FORWARD);
   }
-  MotorL->setSpeed(MotL);
+
+  if (farbON == 1) MotorL->setSpeed(MotL/2);  // verringert geschwindigkeit zum malen
+  else MotorL->setSpeed(MotL);
+ 
   if(empfangen[6]==0){
     MotorL->run(BACKWARD);
   }
@@ -442,11 +445,25 @@ void Fahren(){
   }
 }
 
+
+void MotAus()  // setzt die geschwindigkeit der Bewegungsmotoren auf 0
+{
+ MotorL->setSpeed(0);
+ MotorR->setSpeed(0);
+
+ Serial.println("MotAus");
+}
+
+
 void loop() 
 {
  WiFi_Empfangen();
+
+ Serial.println(vd);
  
  Fahren();
+
+ if (v() == 0) PAus();  // stellt sicher das bei stillstand keine farbe gepumpt wird
   
  if (duesenstand != duese) dueseWechseln();  // kontroliert düsenposition
  
@@ -456,5 +473,6 @@ void loop()
  
  if (reinigungON == 1) reinigung();  // löst den reinigungszyklus aus
 
+ delay(15);
  
 }
