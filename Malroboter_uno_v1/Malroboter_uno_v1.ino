@@ -1,3 +1,10 @@
+//-------------------------------------------------
+//SA 1904/05 Malroboter
+//Programm für Malroboter
+//Erstellt: 02.12.2019
+//Ersteller: Samuel Jenny, Daniel Schnider
+//Für Arduino UNO
+//-------------------------------------------------
 /*
  Diese Software wurde im Rahmen einer Semesterarbeit von Maschinenbau Studenten an der HSR am Institut ILT entwickelt. 
  Sie bedient follgende Funktionen:
@@ -50,6 +57,7 @@ int MotL;  // geschwindigkeit des Linken Antriebsmotors (0...255)
 int MotR;  // geschwindigkeit des Rechten Antriebsmotors (0...255)
 int drMotL;  // drehrichtung des Linken Antriebsmotors. 0 = released, 1 = forwärts, 2 = rückwärts
 int drMotR;  // drehrichtung des Rechten Antriebsmotors. 0 = released, 1 = forwärts, 2 = rückwärts
+int Form; // gewünschte Form. 0 = Fahren mit Joystick, 1 = Quadrat, 2 = Kreis
 int vd;  // geschwindigkeit an der düse
 boolean reinigungON = 0;  // löst den reinigungszyklus aus. 0 = off, 1 = on
 int reinigungszyklen = 3;  // setzt anzahl der reinigungszyklen fest, welche bei aufruf der reinigungsfunktion durchgeführt werden
@@ -70,7 +78,7 @@ RF24 radio(pin_CE,pin_CSN);    //Pin definition CE,CSN
 
 const byte addresse[6] = "00001";      //Adresse für die Kommunikation, Nummer frei wählbar "00000"-"99999", Wichtig!-> Sender und Empfänger selbe Nummer
 
-int empfangen[7] = {0,0,0,0,0,0,0};
+int empfangen[8] = {0,0,0,0,0,0,0,0};
 
 void setup() 
 {
@@ -404,14 +412,14 @@ void WiFi_Empfangen(){
   
   if (radio.available()){
     radio.read(&empfangen, sizeof(empfangen));
-//  Serial.println(empfangen[0]);
-//  Serial.println(empfangen[1]);
-//  Serial.println(empfangen[2]);
-//  Serial.println(empfangen[3]);
-//  Serial.println(empfangen[4]);
-//  Serial.println(empfangen[5]);
-//  Serial.println(empfangen[6]);
-//  Serial.println();
+  Serial.println(empfangen[0]);
+  Serial.println(empfangen[1]);
+  Serial.println(empfangen[2]);
+  Serial.println(empfangen[3]);
+  Serial.println(empfangen[4]);
+  Serial.println(empfangen[5]);
+  Serial.println(empfangen[6]);
+  Serial.println();
   
   }
   duese = empfangen[0];
@@ -421,11 +429,12 @@ void WiFi_Empfangen(){
   MotL = empfangen[4];
   drMotR = empfangen[5];
   drMotL = empfangen[6];
+  Form = empfangen[7];
   
 }
 
 
-void Fahren(){
+void Joystick_Fahren(){
   MotorR->setSpeed(MotR);
   if(empfangen[5]==0){
     MotorR->run(BACKWARD);
@@ -442,12 +451,38 @@ void Fahren(){
   }
 }
 
+void Quadrat_Fahren(){
+  int Geschwindigkeit_Linie = 80;
+  int Geschwindigkeit_Rotation = 20;
+  for(int i = 0; i < 4; i++){
+    MotorR->run(FORWARD);
+    MotorL->run(FORWARD);
+    MotorR->setSpeed(Geschwindigkeit_Linie);
+    MotorL->setSpeed(Geschwindigkeit_Linie);
+    delay(3000);
+    MotorR->run(FORWARD);
+    MotorL->run(BACKWARD);
+    MotorR->setSpeed(Geschwindigkeit_Rotation);
+    MotorL->setSpeed(Geschwindigkeit_Rotation);
+    delay(1000);
+  }
+  
+}
+
+void Kreis_Fahren(){
+  int Geschwindigkeit_R = 80;
+  int Geschwindigkeit_L = 50;
+  MotorR->run(FORWARD);
+  MotorL->run(FORWARD);
+  MotorR->setSpeed(Geschwindigkeit_R);
+  MotorL->setSpeed(Geschwindigkeit_L);
+  delay(10000);
+}
+
 void loop() 
 {
  WiFi_Empfangen();
  
- Fahren();
-  
  if (duesenstand != duese) dueseWechseln();  // kontroliert düsenposition
  
  if (v() < 0 || farbON != 1) wechslerHeben();  // hebt die düsen bei rückwärtsfahrt oder nichtgebrauch
@@ -456,5 +491,15 @@ void loop()
  
  if (reinigungON == 1) reinigung();  // löst den reinigungszyklus aus
 
- 
+ switch (Form){
+  case 0:
+  Joystick_Fahren();
+  break;
+  case 1:
+  Quadrat_Fahren();
+  break;
+  case 2:
+  Kreis_Fahren();
+  break;
+ }
 }
