@@ -55,13 +55,9 @@ int farbMenge = 0;  // (0...255) bestimmt die geschwindigkeit der pumpen und som
 int fmf = 1;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. PLATZHALTER. WERT MUSS NOCH EMPIRISCH ERMITTELT WERDEN 
 int MotL;  // geschwindigkeit des Linken Antriebsmotors (0...255)
 int MotR;  // geschwindigkeit des Rechten Antriebsmotors (0...255)
-
-
 int Form; // gewünschte Form. 0 = Fahren mit Joystick, 1 = Quadrat, 2 = Kreis
-
 int drMotL;  // drehrichtung des Linken Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
 int drMotR;  // drehrichtung des Rechten Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
-
 int vd;  // geschwindigkeit an der düse
 boolean reinigungON = 0;  // löst den reinigungszyklus aus. 0 = off, 1 = on
 int reinigungszyklen = 3;  // setzt anzahl der reinigungszyklen fest, welche bei aufruf der reinigungsfunktion durchgeführt werden
@@ -109,10 +105,8 @@ void setup()
   MotorR->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
   MotorL->run(RELEASE); // modus des Antriebs definieren
   MotorL->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  
   WMot->run(RELEASE); // modus des motors definieren
   WMot->setSpeed(40);  // geschwindigkeit setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  
   servo1.attach(10);  // pin 10 gehört zu servo 1 auf shield
   wechslerHeben();  // setzt servo1 auf grundposition
   
@@ -446,7 +440,7 @@ void WiFi_Empfangen(){
 
 
 
-void Fahren()
+void Joystick_Fahren()
 {
   if (farbON == 1) MotorR->setSpeed(MotR/2);  // verringert geschwindigkeit zum malen
   else MotorR->setSpeed(MotR);
@@ -515,10 +509,6 @@ void loop()
  WiFi_Empfangen();
 
  Serial.println(vd);
- 
-
-
- Fahren();
 
  if (v() == 0) PAus();  // stellt sicher das bei stillstand keine farbe gepumpt wird
   
@@ -534,7 +524,7 @@ void loop()
 
  switch (Form){
   case 0:
- // Joystick_Fahren();
+  Joystick_Fahren();
   break;
   case 1:
   Quadrat_Fahren();
