@@ -42,8 +42,8 @@ Servo servo1;   // erstellt servo1 als Servoobjekt
 
 //Globale Variablen
 int duese = 1;   // nummer der gewünschten Düse
-int servoheben = 60;  // winkel des eingefahrenen servos
-int servosenken = 120;  // winkel des ausgefahrenen servos
+int servoheben = 40;  // winkel des ausgefahrenen servos
+int servosenken = 120;  // winkel des eingefahrenen servos
 int Spos = 120;  // position des Servos
 int Ewert[] = {80, 100, 200, 300, 400, 500, 600}; // encoder werte zu den düsenpositionen. das erst ist 0 damit düsenposition mit array nummer übereinstimmte da arrays mit 0 starten.
 volatile int encoder;     // zählvariabel der encoderschritte
@@ -91,21 +91,21 @@ void setup()
 
   P1->run(RELEASE); // modus der Pumpe definieren
   P1->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  P2->run(RELEASE); // modus der Pumpe definieren
-  P2->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  P3->run(RELEASE); // modus der Pumpe definieren
-  P3->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  P4->run(RELEASE); // modus der Pumpe definieren
-  P4->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  P5->run(RELEASE); // modus der Pumpe definieren
-  P5->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  P6->run(RELEASE); // modus der Pumpe definieren
-  P6->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  MotorR->run(RELEASE); // modus des Antriebs definieren
-  MotorR->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  MotorL->run(RELEASE); // modus des Antriebs definieren
-  MotorL->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  WMot->run(RELEASE); // modus des motors definieren
+  P2->run(RELEASE);
+  P2->setSpeed(0);
+  P3->run(RELEASE); 
+  P3->setSpeed(0); 
+  P4->run(RELEASE); 
+  P4->setSpeed(0); 
+  P5->run(RELEASE); 
+  P5->setSpeed(0);
+  P6->run(RELEASE); 
+  P6->setSpeed(0); 
+  MotorR->run(RELEASE); // modus des Antriebs definieren (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
+  MotorR->setSpeed(0); // geschwindigkeit auf 0 setzen 
+  MotorL->run(RELEASE); 
+  MotorL->setSpeed(0); 
+  WMot->run(RELEASE); 
   WMot->setSpeed(40);  // geschwindigkeit setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
   servo1.attach(10);  // pin 10 gehört zu servo 1 auf shield
   wechslerHeben();  // setzt servo1 auf grundposition
@@ -147,7 +147,7 @@ void nullpunkt()  // fährt den nullpunkt des wechslers an und setzt die positio
   
  WMot->run(RELEASE);
 
- wechslerSenken();
+
 
  Serial.println("nullpunkt abgeschlossen");
  
@@ -444,7 +444,8 @@ void Joystick_Fahren()
 {
   if (farbON == 1) MotorR->setSpeed(MotR/2);  // verringert geschwindigkeit zum malen
   else MotorR->setSpeed(MotR);
-  
+
+//  MotorR->setSpeed(MotR);
 
   if(empfangen[5]==0){
     MotorR->run(BACKWARD);
@@ -455,6 +456,8 @@ void Joystick_Fahren()
 
   if (farbON == 1) MotorL->setSpeed(MotL/2);  // verringert geschwindigkeit zum malen
   else MotorL->setSpeed(MotL);
+
+//  MotorL->setSpeed(MotL);
  
   if(empfangen[6]==0){
     MotorL->run(BACKWARD);
