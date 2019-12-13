@@ -52,7 +52,7 @@ boolean endtaster = 0;   // endtaster um die Position des Düsenwechslers zu def
 int duesenstand = 0;  // zum vergleich gewählter düse mit aktiver
 boolean farbON = 0;  // position des schalters zur aktivierung der farbauftragung. 0 = off, 1 = on
 int farbMenge = 0;  // (0...255) bestimmt die geschwindigkeit der pumpen und somit die Farbmenge
-int fmf = 1;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. PLATZHALTER. WERT MUSS NOCH EMPIRISCH ERMITTELT WERDEN 
+double fmf = 1;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. PLATZHALTER. WERT MUSS NOCH EMPIRISCH ERMITTELT WERDEN 
 int MotL;  // geschwindigkeit des Linken Antriebsmotors (0...255)
 int MotR;  // geschwindigkeit des Rechten Antriebsmotors (0...255)
 int Form; // gewünschte Form. 0 = Fahren mit Joystick, 1 = Quadrat, 2 = Kreis
@@ -64,6 +64,7 @@ int reinigungszyklen = 3;  // setzt anzahl der reinigungszyklen fest, welche bei
 int spueldauer = 3000;  // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
 boolean wechslerOben;  // zeigt ob wechsler angehoben ist. 0 = unten, 1 = oben
 int tFarbrueckzug = 2000;  // dauer des farbrückzuges bei düsenwechseln in ms
+double schmal = 0.6;  // verringert die Farbmende für die schmalen Düsen
 
 //Pins für nRF24L01 Kommunikation
 
@@ -208,7 +209,7 @@ void malen()  // führ die Farbauftragung aus
      P1->run(FORWARD);
      break;
     case 2:
-     P2->setSpeed(farbMenge);
+     P2->setSpeed(farbMenge*schmal);
      P2->run(FORWARD);
      break;
     case 3:
@@ -216,7 +217,7 @@ void malen()  // führ die Farbauftragung aus
      P3->run(FORWARD);
      break;
     case 4:
-     P4->setSpeed(farbMenge);
+     P4->setSpeed(farbMenge*schmal);
      P4->run(FORWARD);
      break;
     case 5:
@@ -224,7 +225,7 @@ void malen()  // führ die Farbauftragung aus
      P5->run(FORWARD);
      break;
     case 6:
-     P6->setSpeed(farbMenge);
+     P6->setSpeed(farbMenge*schmal);
      P6->run(FORWARD);
      break;
    }
