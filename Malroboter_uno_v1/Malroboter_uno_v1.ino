@@ -55,7 +55,7 @@ int farbMenge = 0;  // (0...255) bestimmt die geschwindigkeit der pumpen und som
 double fmf = 1;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. PLATZHALTER. WERT MUSS NOCH EMPIRISCH ERMITTELT WERDEN 
 int MotL;  // geschwindigkeit des Linken Antriebsmotors (0...255)
 int MotR;  // geschwindigkeit des Rechten Antriebsmotors (0...255)
-int Form; // gewünschte Form. 0 = Fahren mit Joystick, 1 = Quadrat, 2 = Kreis
+int Quittierung; // Quittirung gedrückt = 1, sonst = 0
 int drMotL;  // drehrichtung des Linken Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
 int drMotR;  // drehrichtung des Rechten Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
 int vd;  // geschwindigkeit an der düse
@@ -435,7 +435,7 @@ void WiFi_Empfangen(){
   MotL = empfangen[4];
   drMotR = empfangen[5];
   drMotL = empfangen[6];
-  Form = empfangen[7];
+  Quittierung = empfangen[7];
   
 }
 
@@ -468,33 +468,7 @@ void Joystick_Fahren()
   }
 }
 
-void Quadrat_Fahren(){
-  int Geschwindigkeit_Linie = 80;
-  int Geschwindigkeit_Rotation = 20;
-  for(int i = 0; i < 4; i++){
-    MotorR->run(FORWARD);
-    MotorL->run(FORWARD);
-    MotorR->setSpeed(Geschwindigkeit_Linie);
-    MotorL->setSpeed(Geschwindigkeit_Linie);
-    delay(3000);
-    MotorR->run(FORWARD);
-    MotorL->run(BACKWARD);
-    MotorR->setSpeed(Geschwindigkeit_Rotation);
-    MotorL->setSpeed(Geschwindigkeit_Rotation);
-    delay(1000);
-  }
-  
-}
 
-void Kreis_Fahren(){
-  int Geschwindigkeit_R = 80;
-  int Geschwindigkeit_L = 50;
-  MotorR->run(FORWARD);
-  MotorL->run(FORWARD);
-  MotorR->setSpeed(Geschwindigkeit_R);
-  MotorL->setSpeed(Geschwindigkeit_L);
-  delay(10000);
-}
 
 
 
