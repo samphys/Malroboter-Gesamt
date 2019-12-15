@@ -52,7 +52,7 @@ boolean endtaster = 0;   // endtaster um die Position des Düsenwechslers zu def
 int duesenstand = 0;  // zum vergleich gewählter düse mit aktiver
 boolean farbON = 0;  // position des schalters zur aktivierung der farbauftragung. 0 = off, 1 = on
 int farbMenge = 0;  // (0...255) bestimmt die geschwindigkeit der pumpen und somit die Farbmenge
-double fmf = 1;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. PLATZHALTER. WERT MUSS NOCH EMPIRISCH ERMITTELT WERDEN 
+double fmf = 0.7;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. PLATZHALTER. WERT MUSS NOCH EMPIRISCH ERMITTELT WERDEN 
 int MotL;  // geschwindigkeit des Linken Antriebsmotors (0...255)
 int MotR;  // geschwindigkeit des Rechten Antriebsmotors (0...255)
 int Quittierung; // Quittirung gedrückt = 1, sonst = 0
