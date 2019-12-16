@@ -55,7 +55,7 @@ int farbMenge = 0;  // (0...255) bestimmt die geschwindigkeit der pumpen und som
 double fmf = 0.7;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. PLATZHALTER. WERT MUSS NOCH EMPIRISCH ERMITTELT WERDEN 
 int MotL;  // geschwindigkeit des Linken Antriebsmotors (0...255)
 int MotR;  // geschwindigkeit des Rechten Antriebsmotors (0...255)
-int Quittierung; // Quittirung gedrückt = 1, sonst = 0
+int Quittierung; // Quittirung gedrückt = 1, sonst = 0, führt den reinigungsvorgang fort
 int drMotL;  // drehrichtung des Linken Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
 int drMotR;  // drehrichtung des Rechten Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
 int vd;  // geschwindigkeit an der düse
@@ -345,51 +345,127 @@ int v()  // geschwindigkeit an der düse
 }
 
 
-void reinigung()  // reinigt alle düsen "reinigungszyklen"-mal jeweils für "spueldauer" ms 
+void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung,reinigt alle düsen "reinigungszyklen"-mal jeweils für "spueldauer" ms, warte zwischen zyklen auf quittierung 
 {
  Serial.println("reinigung gestartet");
  
  MotAus(); 
  duese = 1;
- dueseWechseln();
-  
- for (int i = 0; i < reinigungszyklen*6; i++)
- {
-  if (duese <= 5)  //von duese 1 bis 6 durchwechseln
-  {
-   switch (duese)
-   {
-    case 1:
-     P1->setSpeed(250);
-     P1->run(FORWARD);
-     break;
-    case 2:
-     P2->setSpeed(250);
-     P2->run(FORWARD);
-     break;
-    case 3:
-     P3->setSpeed(250);
-     P3->run(FORWARD);
-     break;
-    case 4:
-     P4->setSpeed(250);
-     P4->run(FORWARD);
-     break;
-    case 5:
-     P5->setSpeed(250);
-     P5->run(FORWARD);
-     break;
-    case 6:
-     P6->setSpeed(250);
-     P6->run(FORWARD);
-     break;
+ wechslerHeben();
+
+ for (int i = 0; i <= 6; i++)  //von duese 1 bis 6 durchwechseln um Farbe zurück zu führen
+ {if (duese <= 6)  
+   {while (Ewert[duese] > encoder)     // dreht wechsler vorwärts
+     {drehrichtung = 0;
+      WMot->run(FORWARD);
+     }  
+    while (Ewert[duese] < encoder)     // dreht wechsler rückwärts
+    {drehrichtung = 1;
+     WMot->run(BACKWARD);
+    }
+   WMot->run(RELEASE);                // stopt den wechsler
+   duesenstand = duese;
    }
-   delay(spueldauer);
-   PAus();
-   dueseWechseln();
-   duese++;
-  } 
+   Serial.println("saugen");
+   Serial.print("Q");
+   Serial.println(Quittierung);
+      
+  switch (duese)
+  {
+   case 1:
+    P1->setSpeed(250);
+    P1->run(BACKWARD);
+    break;
+   case 2:
+    P2->setSpeed(250);
+    P2->run(BACKWARD);
+    break;
+   case 3:
+    P3->setSpeed(250);
+    P3->run(BACKWARD);
+    break;
+   case 4:
+    P4->setSpeed(250);
+    P4->run(BACKWARD);
+    break;
+   case 5:
+    P5->setSpeed(250);
+    P5->run(BACKWARD);
+    break;
+   case 6:
+    P6->setSpeed(250);
+    P6->run(BACKWARD);
+    break;
+  }
+    delay(spueldauer);
+    PAus();
+    duese++;
  }
+  
+
+ while (Quittierung != 1)
+ {
+  radio.read(&empfangen, sizeof(empfangen));  
+  Quittierung = empfangen[7];
+  Serial.print("Q");
+  Serial.println(Quittierung);
+ } 
+
+ for (int k = 0; k < reinigungszyklen; k++)  //von duese 1 bis 6 durchwechseln um die Düsen zu reinigen
+ {
+  duese = 1; 
+  for (int i = 0; i <= 6; i++)  
+  {if (duese <= 6)  
+    {while (Ewert[duese] > encoder)     // dreht wechsler vorwärts
+     {drehrichtung = 0;
+      WMot->run(FORWARD);
+     }
+     while (Ewert[duese] < encoder)     // dreht wechsler rückwärts
+     {drehrichtung = 1;
+      WMot->run(BACKWARD);
+     }
+     WMot->run(RELEASE);                // stopt den wechsler
+     duesenstand = duese;
+
+     Serial.println("Blasen");
+     switch (duese)
+     {case 1:
+       P1->setSpeed(250);
+       P1->run(FORWARD);
+       break;
+      case 2:
+       P2->setSpeed(250);
+       P2->run(FORWARD);
+       break;
+      case 3:
+       P3->setSpeed(250);
+       P3->run(FORWARD);
+       break;
+      case 4:
+       P4->setSpeed(250);
+       P4->run(FORWARD);
+       break;
+      case 5:
+       P5->setSpeed(250);
+       P5->run(FORWARD);
+       break;
+      case 6:
+       P6->setSpeed(250);
+       P6->run(FORWARD);
+       break;
+      }
+    delay(spueldauer);
+    PAus();
+    duese++;
+    }
+  }
+ while (Quittierung != 1)
+  {
+   radio.read(&empfangen, sizeof(empfangen));  
+   Quittierung = empfangen[7];
+  }
+ }
+ 
  Serial.println("reinigung abgeschlossen");
 }
 
@@ -409,14 +485,6 @@ void WiFi_Empfangen(){
   if (radio.available()){
     radio.read(&empfangen, sizeof(empfangen));
 
-  Serial.println(empfangen[0]);
-  Serial.println(empfangen[1]);
-  Serial.println(empfangen[2]);
-  Serial.println(empfangen[3]);
-  Serial.println(empfangen[4]);
-  Serial.println(empfangen[5]);
-  Serial.println(empfangen[6]);
-
 //  Serial.println(empfangen[0]);
 //  Serial.println(empfangen[1]);
 //  Serial.println(empfangen[2]);
@@ -425,7 +493,7 @@ void WiFi_Empfangen(){
 //  Serial.println(empfangen[5]);
 //  Serial.println(empfangen[6]);
 
-  Serial.println();
+//  Serial.println();
   
   }
   duese = empfangen[0];
@@ -446,8 +514,6 @@ void Joystick_Fahren()
   if (farbON == 1) MotorR->setSpeed(MotR/2);  // verringert geschwindigkeit zum malen
   else MotorR->setSpeed(MotR);
 
-//  MotorR->setSpeed(MotR);
-
   if(empfangen[5]==0){
     MotorR->run(BACKWARD);
   }
@@ -457,8 +523,6 @@ void Joystick_Fahren()
 
   if (farbON == 1) MotorL->setSpeed(MotL/2);  // verringert geschwindigkeit zum malen
   else MotorL->setSpeed(MotL);
-
-//  MotorL->setSpeed(MotL);
  
   if(empfangen[6]==0){
     MotorL->run(BACKWARD);
@@ -486,11 +550,8 @@ void loop()
 {
  WiFi_Empfangen();
 
- Serial.println(vd);
-
  if (v() == 0) PAus();  // stellt sicher das bei stillstand keine farbe gepumpt wird
   
-
  if (duesenstand != duese) dueseWechseln();  // kontroliert düsenposition
  
  if (v() < 0 || farbON != 1) wechslerHeben();  // hebt die düsen bei rückwärtsfahrt oder nichtgebrauch
@@ -498,21 +559,6 @@ void loop()
  if (duesenstand == duese && farbON == 1 && v() > 0) malen();  // kontroliert die bedingungen um farbe aufzutragen
  
  if (reinigungON == 1) reinigung();  // löst den reinigungszyklus aus
-
-
- switch (Form){
-  case 0:
-  Joystick_Fahren();
-  break;
-  case 1:
-  Quadrat_Fahren();
-  break;
-  case 2:
-  Kreis_Fahren();
-  break;
- }
-
- delay(15);
  
-
+ Joystick_Fahren();
 }
