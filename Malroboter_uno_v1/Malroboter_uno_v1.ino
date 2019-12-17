@@ -23,51 +23,52 @@
 #include <RF24.h>
 
 //Inizialisierung der i2c verbindung mit den Shields
-Adafruit_MotorShield AFMS0(0x60); // No jumper closed
-Adafruit_MotorShield AFMS1(0x61); // Rightmost jumper closed
-Adafruit_MotorShield AFMS2(0x62); // Second to Rightmost jumper closed
+Adafruit_MotorShield AFMS0(0x60);                // No jumper closed
+Adafruit_MotorShield AFMS1(0x61);                // Rightmost jumper closed
+Adafruit_MotorShield AFMS2(0x62);                // Second to Rightmost jumper closed
 
 //Zuweisung der Motorplätze der Shields an Variablen
-Adafruit_DCMotor *P1 = AFMS0.getMotor(1);  // Pumpe 1
-Adafruit_DCMotor *P2 = AFMS0.getMotor(2);  // Pumpe 2
-Adafruit_DCMotor *P3 = AFMS0.getMotor(3);  // Pumpe 3
-Adafruit_DCMotor *P4 = AFMS0.getMotor(4);  // Pumpe 4
-Adafruit_DCMotor *P5 = AFMS1.getMotor(1);  // Pumpe 5
-Adafruit_DCMotor *P6 = AFMS1.getMotor(2);  // Pumpe 6
-Adafruit_DCMotor *WMot = AFMS1.getMotor(3);  // Motor des wechslers
-Adafruit_DCMotor *MotorL = AFMS2.getMotor(1);  // Linker Antrieb
-Adafruit_DCMotor *MotorR = AFMS2.getMotor(2);  // Rechter Antrieb
+Adafruit_DCMotor *P1 = AFMS0.getMotor(1);        // Pumpe 1
+Adafruit_DCMotor *P2 = AFMS0.getMotor(2);        // Pumpe 2
+Adafruit_DCMotor *P3 = AFMS0.getMotor(3);        // Pumpe 3
+Adafruit_DCMotor *P4 = AFMS0.getMotor(4);        // Pumpe 4
+Adafruit_DCMotor *P5 = AFMS1.getMotor(1);        // Pumpe 5
+Adafruit_DCMotor *P6 = AFMS1.getMotor(2);        // Pumpe 6
+Adafruit_DCMotor *WMot = AFMS1.getMotor(3);      // Motor des wechslers
+Adafruit_DCMotor *MotorL = AFMS2.getMotor(1);    // Linker Antrieb
+Adafruit_DCMotor *MotorR = AFMS2.getMotor(2);    // Rechter Antrieb
 
-Servo servo1;   // erstellt servo1 als Servoobjekt
+Servo servo1;                                    // erstellt servo1 als Servoobjekt
 
 //Globale Variablen
-int duese = 1;   // nummer der gewünschten Düse
-int servoheben = 40;  // winkel des ausgefahrenen servos
-int servosenken = 120;  // winkel des eingefahrenen servos
-int Spos = 120;  // position des Servos
-int Ewert[] = {80, 100, 200, 300, 400, 500, 600}; // encoder werte zu den düsenpositionen. das erst ist 0 damit düsenposition mit array nummer übereinstimmte da arrays mit 0 starten.
-volatile int encoder;     // zählvariabel der encoderschritte
-volatile boolean drehrichtung;    // drehrichtung des Wechslers. 0 = forwärts, 1 = rückwärts
-boolean endtaster = 0;   // endtaster um die Position des Düsenwechslers zu definieren
-int duesenstand = 0;  // zum vergleich gewählter düse mit aktiver
-boolean farbON = 0;  // position des schalters zur aktivierung der farbauftragung. 0 = off, 1 = on
-int farbMenge = 0;  // (0...255) bestimmt die geschwindigkeit der pumpen und somit die Farbmenge
-double fmf = 0.7;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. 
-int MotL;  // geschwindigkeit des Linken Antriebsmotors (0...255)
-int MotR;  // geschwindigkeit des Rechten Antriebsmotors (0...255)
-int Quittierung; // Quittirung gedrückt = 1, sonst = 0, führt den reinigungsvorgang fort
-int drMotL;  // drehrichtung des Linken Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
-int drMotR;  // drehrichtung des Rechten Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
-int vd;  // geschwindigkeit an der düse
-boolean reinigungON = 0;  // löst den reinigungszyklus aus. 0 = off, 1 = on
-int reinigungszyklen = 3;  // setzt anzahl der reinigungszyklen fest, welche bei aufruf der reinigungsfunktion durchgeführt werden
-int spueldauer = 30000;  // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
-boolean wechslerOben;  // zeigt ob wechsler angehoben ist. 0 = unten, 1 = oben
-int tFarbrueckzug = 2000;  // dauer des farbrückzuges bei düsenwechseln in ms
-double schmal = 0.6;  // verringert die Farbmende für die schmalen Düsen
+int duese = 1;                                   // nummer der gewünschten Düse
+int servoheben = 40;                             // winkel des ausgefahrenen servos
+int servosenken = 120;                           // winkel des eingefahrenen servos
+int Spos = 120;                                  // position des Servos
+int Ewert[] = {80, 100, 200, 300, 400, 500, 600};// encoder werte zu den düsenpositionen. das erst ist 0 damit düsenposition mit array nummer übereinstimmte da arrays mit 0 starten.
+volatile int encoder;                            // zählvariabel der encoderschritte
+volatile boolean drehrichtung;                   // drehrichtung des Wechslers. 0 = forwärts, 1 = rückwärts
+boolean endtaster = 0;                           // endtaster um die Position des Düsenwechslers zu definieren
+int duesenstand = 0;                             // zum vergleich gewählter düse mit aktiver
+boolean farbON = 0;                              // position des schalters zur aktivierung der farbauftragung. 0 = off, 1 = on
+int farbMenge = 0;                               // (0...255) bestimmt die geschwindigkeit der pumpen und somit die Farbmenge
+double fmf = 0.7;                                // Farbmengenfaktor zur regulierung der Farbmengenberechnung. 
+int MotL;                                        // geschwindigkeit des Linken Antriebsmotors (0...255)
+int MotR;                                        // geschwindigkeit des Rechten Antriebsmotors (0...255)
+int Quittierung;                                 // Quittirung gedrückt = 1, sonst = 0, führt den reinigungsvorgang fort
+int drMotL;                                      // drehrichtung des Linken Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
+int drMotR;                                      // drehrichtung des Rechten Antriebsmotors. 2 = released, 1 = forwärts, 0 = rückwärts
+int vd;                                          // geschwindigkeit an der düse
+boolean reinigungON = 0;                         // löst den reinigungszyklus aus. 0 = off, 1 = on
+int reinigungszyklen = 3;                        // setzt anzahl der reinigungszyklen fest, welche bei aufruf der reinigungsfunktion durchgeführt werden
+int spueldauer = 30000;                          // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
+boolean wechslerOben;                            // zeigt ob wechsler angehoben ist. 0 = unten, 1 = oben
+int tFarbrueckzug = 2000;                        // dauer des farbrückzuges bei düsenwechseln in ms
+double schmal = 0.6;                             // verringert die Farbmende für die schmalen Düsen
+int status_LED = 6;                              // status LED definieren
+int endschalter_PIN = 3;                         // Endtaster Pin definition
 
 //Pins für nRF24L01 Kommunikation
-
 int pin_CSN = 7;
 int pin_CE = 8;
 int pin_MOSI = 11;
@@ -75,23 +76,23 @@ int pin_MISO = 12;
 int pin_SCK = 13;
 
 
-RF24 radio(pin_CE,pin_CSN);    //Pin definition CE,CSN
+RF24 radio(pin_CE,pin_CSN);                      //Pin definition CE,CSN
 
-const byte addresse[6] = "00001";      //Adresse für die Kommunikation, Nummer frei wählbar "00000"-"99999", Wichtig!-> Sender und Empfänger selbe Nummer
+const byte addresse[6] = "00001";                //Adresse für die Kommunikation, Nummer frei wählbar "00000"-"99999", Wichtig!-> Sender und Empfänger selbe Nummer
 
-int empfangen[8] = {0,0,0,0,0,0,0,0};
+int empfangen[8] = {0,0,0,0,0,0,0,0};            //Empfangs-Array erstellen und mit Nullen beladen
 
 void setup() 
 {
-  Serial.begin(9600);  // serial gedöns nur zu testzwecken
+  Serial.begin(9600);                            // serial gedöns nur zu testzwecken
   Serial.println("setup gestartet");
   
-  AFMS0.begin(); // Startet das untere Shield
-  AFMS1.begin(); // Startet das mittlere Shield
-  AFMS2.begin(); // Startet das obere Shield
+  AFMS0.begin();                                 // Startet das untere Shield
+  AFMS1.begin();                                 // Startet das mittlere Shield
+  AFMS2.begin();                                 // Startet das obere Shield
 
-  P1->run(RELEASE); // modus der Pumpe definieren
-  P1->setSpeed(0); // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
+  P1->run(RELEASE);                              // modus der Pumpe definieren
+  P1->setSpeed(0);                               // geschwindigkeit auf 0 setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
   P2->run(RELEASE);
   P2->setSpeed(0);
   P3->run(RELEASE); 
@@ -102,28 +103,28 @@ void setup()
   P5->setSpeed(0);
   P6->run(RELEASE); 
   P6->setSpeed(0); 
-  MotorR->run(RELEASE); // modus des Antriebs definieren (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  MotorR->setSpeed(0); // geschwindigkeit auf 0 setzen 
+  MotorR->run(RELEASE);                          // modus des Antriebs definieren (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
+  MotorR->setSpeed(0);                           // geschwindigkeit auf 0 setzen 
   MotorL->run(RELEASE); 
   MotorL->setSpeed(0); 
   WMot->run(RELEASE); 
-  WMot->setSpeed(40);  // geschwindigkeit setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
-  servo1.attach(10);  // pin 10 gehört zu servo 1 auf shield
-  wechslerHeben();  // setzt servo1 auf grundposition
+  WMot->setSpeed(40);                            // geschwindigkeit setzen (0...255). Wobei werte kleiner als 20 aus mechanischen gründen nicht funktionieren
+  servo1.attach(10);                             // pin 10 gehört zu servo 1 auf shield
+  wechslerHeben();                               // setzt servo1 auf grundposition
   
   attachInterrupt(digitalPinToInterrupt(2), counter, RISING);  // definiert pin 2 als hardware interrupt. getrigerrt mit einer steigenden flanke(RISING) wird die funktion counter aufgerufen.
 
-  pinMode(3, INPUT);  // anschluss des Endtasters
-  pinMode(6, OUTPUT);  // Status LED
+  pinMode(endschalter_PIN, INPUT);                             // anschluss des Endtasters
+  pinMode(status_LED, OUTPUT);                   // Status LED
 
-  digitalWrite(6, HIGH);  // setzt Status LED auf High
+  digitalWrite(status_LED, HIGH);                // setzt Status LED auf High
 
-  nullpunkt();  // aufruf der nullpunktfunktion des wechslers
+  nullpunkt();                                   // aufruf der nullpunktfunktion des wechslers
 
 //Setup WiFi Kommunikation
   radio.begin();
-  radio.openReadingPipe(1,addresse[0]);   //Empfangen auf "00001"
-  radio.setPALevel(RF24_PA_MIN);     // Power Amplifier level {RF24_PA_MIN ,RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX}
+  radio.openReadingPipe(1,addresse[0]);          // Empfangen auf "00001"
+  radio.setPALevel(RF24_PA_MIN);                 // Power Amplifier level {RF24_PA_MIN ,RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX}
   radio.startListening();
 
 
@@ -131,19 +132,19 @@ void setup()
 }
 
 
-void nullpunkt()  // fährt den nullpunkt des wechslers an und setzt die position
+void nullpunkt()                                  // fährt den nullpunkt des wechslers an und setzt die position
 {
  Serial.println("nullpunkt gestartet");
  MotAus(); 
  PAus();
  wechslerHeben();
     
- while (endtaster != 1)  // fährt den Wechsler an den Endschalter um die Position zu bestimmen
+ while (endtaster != 1)                           // fährt den Wechsler an den Endschalter um die Position zu bestimmen
   {
    drehrichtung = 1;
    WMot->run(BACKWARD);
-   endtaster = digitalRead(3);
-   encoder = 60;  // setzt den encoder auf den Wert der endschalterposition. WERT NOCH PLATZHALTER. MUSS NOCH BESTIMMT WERDEN
+   endtaster = digitalRead(endschalter_PIN);
+   encoder = 60;                                  // setzt den encoder auf den Wert der endschalterposition. WERT NOCH PLATZHALTER. MUSS NOCH BESTIMMT WERDEN
   }
   
  WMot->run(RELEASE);
@@ -502,22 +503,14 @@ void PAus()  // schaltet alle pumpen aus
  P6->run(RELEASE);
 }
 
+//WiFi daten empfangen
 void WiFi_Empfangen(){
   
   if (radio.available()){
     radio.read(&empfangen, sizeof(empfangen));
-
-//  Serial.println(empfangen[0]);
-//  Serial.println(empfangen[1]);
-//  Serial.println(empfangen[2]);
-//  Serial.println(empfangen[3]);
-//  Serial.println(empfangen[4]);
-//  Serial.println(empfangen[5]);
-//  Serial.println(empfangen[6]);
-
-//  Serial.println();
-  
   }
+
+//Array beladen
   duese = empfangen[0];
   farbON = empfangen[1];
   reinigungON = empfangen[2];
@@ -530,7 +523,7 @@ void WiFi_Empfangen(){
 }
 
 
-
+//Empfangene Motoren Signale Verwerten
 void Joystick_Fahren()
 {
   if (farbON == 1) MotorR->setSpeed(MotR/2);  // verringert geschwindigkeit zum malen
@@ -553,10 +546,6 @@ void Joystick_Fahren()
     MotorL->run(FORWARD);
   }
 }
-
-
-
-
 
 void MotAus()  // setzt die geschwindigkeit der Bewegungsmotoren auf 0
 {
