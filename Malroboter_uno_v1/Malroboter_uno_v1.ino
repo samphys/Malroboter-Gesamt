@@ -61,7 +61,8 @@ int drMotR;                                      // drehrichtung des Rechten Ant
 int vd;                                          // geschwindigkeit an der düse
 boolean reinigungON = 0;                         // löst den reinigungszyklus aus. 0 = off, 1 = on
 int reinigungszyklen = 3;                        // setzt anzahl der reinigungszyklen fest, welche bei aufruf der reinigungsfunktion durchgeführt werden
-int spueldauer = 30000;                          // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
+int spueldauer = 60000;                          // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
+int oekoMove = 10000;                            // zeit um die restliche Farbe vor der Reinigung zurück in die Farbflaschen zu Pumpen (Zeit in ms) 
 boolean wechslerOben;                            // zeigt ob wechsler angehoben ist. 0 = unten, 1 = oben
 int tFarbrueckzug = 2000;                        // dauer des farbrückzuges bei düsenwechseln in ms
 double schmal = 0.6;                             // verringert die Farbmende für die schmalen Düsen
@@ -346,7 +347,7 @@ int v()  // geschwindigkeit an der düse
 }
 
 
-void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung,reinigt alle düsen "reinigungszyklen"-mal jeweils für "spueldauer" ms, warte zwischen zyklen auf quittierung 
+void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung, reinigt alle düsen "reinigungszyklen"-mal jeweils für "spueldauer" ms, wartet zwischen zyklen auf quittierung 
 {
 // Serial.println("reinigung gestartet");
  
