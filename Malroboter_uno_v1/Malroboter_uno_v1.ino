@@ -52,7 +52,7 @@ boolean endtaster = 0;   // endtaster um die Position des Düsenwechslers zu def
 int duesenstand = 0;  // zum vergleich gewählter düse mit aktiver
 boolean farbON = 0;  // position des schalters zur aktivierung der farbauftragung. 0 = off, 1 = on
 int farbMenge = 0;  // (0...255) bestimmt die geschwindigkeit der pumpen und somit die Farbmenge
-double fmf = 0.7;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. PLATZHALTER. WERT MUSS NOCH EMPIRISCH ERMITTELT WERDEN 
+double fmf = 0.7;  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. 
 int MotL;  // geschwindigkeit des Linken Antriebsmotors (0...255)
 int MotR;  // geschwindigkeit des Rechten Antriebsmotors (0...255)
 int Quittierung; // Quittirung gedrückt = 1, sonst = 0, führt den reinigungsvorgang fort
@@ -61,7 +61,7 @@ int drMotR;  // drehrichtung des Rechten Antriebsmotors. 2 = released, 1 = forw�
 int vd;  // geschwindigkeit an der düse
 boolean reinigungON = 0;  // löst den reinigungszyklus aus. 0 = off, 1 = on
 int reinigungszyklen = 3;  // setzt anzahl der reinigungszyklen fest, welche bei aufruf der reinigungsfunktion durchgeführt werden
-int spueldauer = 3000;  // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
+int spueldauer = 30000;  // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
 boolean wechslerOben;  // zeigt ob wechsler angehoben ist. 0 = unten, 1 = oben
 int tFarbrueckzug = 2000;  // dauer des farbrückzuges bei düsenwechseln in ms
 double schmal = 0.6;  // verringert die Farbmende für die schmalen Düsen
@@ -347,7 +347,7 @@ int v()  // geschwindigkeit an der düse
 
 void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung,reinigt alle düsen "reinigungszyklen"-mal jeweils für "spueldauer" ms, warte zwischen zyklen auf quittierung 
 {
- Serial.println("reinigung gestartet");
+// Serial.println("reinigung gestartet");
  
  MotAus(); 
  duese = 1;
@@ -366,9 +366,9 @@ void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung,re
    WMot->run(RELEASE);                // stopt den wechsler
    duesenstand = duese;
    }
-   Serial.println("saugen");
-   Serial.print("Q");
-   Serial.println(Quittierung);
+ //  Serial.println("saugen");
+ //  Serial.print("Q");
+ //  Serial.println(Quittierung);
       
   switch (duese)
   {
@@ -405,18 +405,24 @@ void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung,re
 
  while (Quittierung != 1)
  {
+  if (radio.available()){
   radio.read(&empfangen, sizeof(empfangen));  
   Quittierung = empfangen[7];
-  Serial.print("Q");
-  Serial.println(Quittierung);
+//  Serial.print("Q");
+//  Serial.println(Quittierung);
+  }
+  
+  //Serial.print("Qa");
+  //Serial.println(Quittierung);
+  //delay(100);
  } 
 
  for (int k = 0; k < reinigungszyklen; k++)  //von duese 1 bis 6 durchwechseln um die Düsen zu reinigen
  {
   duese = 1; 
-  for (int i = 0; i <= 6; i++)  
-  {if (duese <= 6)  
-    {while (Ewert[duese] > encoder)     // dreht wechsler vorwärts
+  for (int i = 0; i < 6; i++)  
+  {  
+     while (Ewert[duese] > encoder)     // dreht wechsler vorwärts
      {drehrichtung = 0;
       WMot->run(FORWARD);
      }
@@ -427,7 +433,7 @@ void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung,re
      WMot->run(RELEASE);                // stopt den wechsler
      duesenstand = duese;
 
-     Serial.println("Blasen");
+ //    Serial.println("Blasen");
      switch (duese)
      {case 1:
        P1->setSpeed(250);
@@ -457,16 +463,32 @@ void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung,re
     delay(spueldauer);
     PAus();
     duese++;
+    
+  }
+  Quittierung = 0;
+ 
+  for (int g = 0; g < 20;)
+  {
+    if (radio.available()){
+   radio.read(&empfangen, sizeof(empfangen));
+    g++;
     }
   }
+  
  while (Quittierung != 1)
-  {
+  {delay(5);
+   if (radio.available()){
    radio.read(&empfangen, sizeof(empfangen));  
    Quittierung = empfangen[7];
+ //  Serial.print("Q");
+//   Serial.println(Quittierung);
+   }
+   //Serial.print("Qa");
+   //Serial.println(Quittierung);
   }
  }
  
- Serial.println("reinigung abgeschlossen");
+// Serial.println("reinigung abgeschlossen");
 }
 
 
