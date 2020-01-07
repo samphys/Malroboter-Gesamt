@@ -52,7 +52,7 @@ boolean endtaster = 0;                           // endtaster um die Position de
 int duesenstand = 0;                             // zum vergleich gewählter düse mit aktiver
 boolean farbON = 0;                              // position des schalters zur aktivierung der farbauftragung. 0 = off, 1 = on
 int farbMenge = 0;                               // (0...255) bestimmt die geschwindigkeit der pumpen und somit die Farbmenge
-double fmf = 0.7;                                // Farbmengenfaktor zur regulierung der Farbmengenberechnung. 
+double fmf = 1;                                  // Farbmengenfaktor zur regulierung der Farbmengenberechnung. 
 int MotL;                                        // geschwindigkeit des Linken Antriebsmotors (0...255)
 int MotR;                                        // geschwindigkeit des Rechten Antriebsmotors (0...255)
 int Quittierung;                                 // Quittirung gedrückt = 1, sonst = 0, führt den reinigungsvorgang fort
@@ -61,11 +61,11 @@ int drMotR;                                      // drehrichtung des Rechten Ant
 int vd;                                          // geschwindigkeit an der düse
 boolean reinigungON = 0;                         // löst den reinigungszyklus aus. 0 = off, 1 = on
 int reinigungszyklen = 3;                        // setzt anzahl der reinigungszyklen fest, welche bei aufruf der reinigungsfunktion durchgeführt werden
-int spueldauer = 60000;                          // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
-int oekoMove = 10000;                            // zeit um die restliche Farbe vor der Reinigung zurück in die Farbflaschen zu Pumpen (Zeit in ms) 
+unsigned long spueldauer = 60000;                          // dauer der spühlung einer einzelnen düse im reinigungsmodus (zeit in ms)
+unsigned long oekoMove = 10000;                            // zeit um die restliche Farbe vor der Reinigung zurück in die Farbflaschen zu Pumpen (Zeit in ms) 
 boolean wechslerOben;                            // zeigt ob wechsler angehoben ist. 0 = unten, 1 = oben
 int tFarbrueckzug = 2000;                        // dauer des farbrückzuges bei düsenwechseln in ms
-double schmal = 0.6;                             // verringert die Farbmende für die schmalen Düsen
+double schmal = 0.8;                             // verringert die Farbmende für die schmalen Düsen
 int status_LED = 6;                              // status LED definieren
 int endschalter_PIN = 3;                         // Endtaster Pin definition
 
@@ -145,7 +145,7 @@ void nullpunkt()                                  // fährt den nullpunkt des we
    drehrichtung = 1;
    WMot->run(BACKWARD);
    endtaster = digitalRead(endschalter_PIN);
-   encoder = 60;                                  // setzt den encoder auf den Wert der endschalterposition. WERT NOCH PLATZHALTER. MUSS NOCH BESTIMMT WERDEN
+   encoder = 57;                                  // setzt den encoder auf den Wert der endschalterposition. WERT NOCH PLATZHALTER. MUSS NOCH BESTIMMT WERDEN
   }
   
  WMot->run(RELEASE);
@@ -349,7 +349,7 @@ int v()  // geschwindigkeit an der düse
 
 void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung, reinigt alle düsen "reinigungszyklen"-mal jeweils für "spueldauer" ms, wartet zwischen zyklen auf quittierung 
 {
-// Serial.println("reinigung gestartet");
+ Serial.println("reinigung gestartet");
  
  MotAus(); 
  duese = 1;
@@ -368,7 +368,7 @@ void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung, r
    WMot->run(RELEASE);                // stopt den wechsler
    duesenstand = duese;
    }
- //  Serial.println("saugen");
+   Serial.println("saugen");
  //  Serial.print("Q");
  //  Serial.println(Quittierung);
       
@@ -399,7 +399,7 @@ void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung, r
     P6->run(BACKWARD);
     break;
   }
-    delay(spueldauer);
+    delay(oekoMove);
     PAus();
     duese++;
  }
@@ -435,7 +435,7 @@ void reinigung()  // fördert restliche farbe zurück, wartet auf quittierung, r
      WMot->run(RELEASE);                // stopt den wechsler
      duesenstand = duese;
 
- //    Serial.println("Blasen");
+     Serial.println("Blasen");
      switch (duese)
      {case 1:
        P1->setSpeed(250);
